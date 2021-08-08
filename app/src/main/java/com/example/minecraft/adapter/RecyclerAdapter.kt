@@ -17,6 +17,7 @@ import java.io.File
 
 class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(), ChangeFavState {
     private var modList = emptyList<Mod>()
+    private var isDownloadedList = mutableMapOf<Int, Boolean>()
     private var isFavList = mutableMapOf<Int, Boolean>()
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -36,29 +37,13 @@ class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<Re
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val v = ViewHolder(
+        return ViewHolder(
                 LayoutInflater.from(parent.context).inflate(
                         R.layout.list_item,
                         parent,
                         false
                 )
         )
-
-        v.itemIsFavIcon.setOnClickListener {
-            val currentItem = modList[v.adapterPosition]
-            val newState = changeState(currentItem, mModViewModel)
-
-            if (newState) {
-                v.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
-            } else {
-                v.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
-            }
-            notifyItemChanged(v.adapterPosition)
-            isFavList[v.adapterPosition] = newState
-            changeData(isFavList)
-        }
-
-        return v
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -67,11 +52,21 @@ class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<Re
         holder.itemTitle.text = currentItem.title
         holder.itemContent.text = currentItem.content
 
-        val filePath = File(holder.itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString() + "/")
-        val file = File(filePath, currentItem.modUri)
-
-        if (file.exists()) { // If file exists
-            holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+        if (isDownloadedList.contains(position)) {
+            if (isDownloadedList[position] == true) {
+                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+            } else {
+                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
+            }
+        } else {
+            val filePath = File(holder.itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString() + "/")
+            val file = File(filePath, currentItem.modUri)
+            isDownloadedList[position] = file.exists()
+            if (isDownloadedList[position] == true) {
+                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+            } else {
+                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
+            }
         }
 
         if (isFavList.contains(position)) {
@@ -81,12 +76,25 @@ class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<Re
                 holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
             }
         } else {
-            isFavList.put(position, currentItem.isFav)
+            isFavList[position] = currentItem.isFav
             if (isFavList[position] == true) {
                 holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
             } else {
                 holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
             }
+        }
+
+        holder.itemIsFavIcon.setOnClickListener {
+            val newState = changeState(currentItem, mModViewModel)
+
+            if (newState) {
+                holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
+            } else {
+                holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
+            }
+            notifyItemChanged(position)
+            isFavList[position] = newState
+            changeData(isFavList)
         }
 
         holder.itemCard.setOnClickListener {
@@ -104,7 +112,7 @@ class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<Re
         notifyDataSetChanged()
     }
 
-    fun changeData(isFavList: MutableMap<Int, Boolean>) {
+    private fun changeData(isFavList: MutableMap<Int, Boolean>) {
         this.isFavList = isFavList
         notifyDataSetChanged()
     }

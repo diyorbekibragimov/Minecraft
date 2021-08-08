@@ -17,6 +17,7 @@ import java.io.File
 
 class FavRecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<FavRecyclerAdapter.ViewHolder>(), ChangeFavState {
     private var modList = emptyList<Mod>()
+    private val isDownloadedList = mutableMapOf<Int, Boolean>()
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var itemTitle: TextView
@@ -34,24 +35,14 @@ class FavRecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavRecyclerAdapter.ViewHolder {
-        val view = FavRecyclerAdapter.ViewHolder(
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        return ViewHolder(
                 LayoutInflater.from(parent.context).inflate(
                         R.layout.list_item,
                         parent,
                         false
                 )
         )
-        view.itemIsFavIcon.setOnClickListener {
-            val currentItem = modList[view.adapterPosition]
-            val newState = changeState(currentItem, mModViewModel)
-
-            if (!newState) {
-                notifyItemRemoved(view.adapterPosition)
-            }
-        }
-
-        return view
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -60,11 +51,29 @@ class FavRecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter
         holder.itemContent.text = currentItem.content
         holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
 
-        val filePath = File(holder.itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString() + "/")
-        val file = File(filePath, currentItem.modUri)
+        if (isDownloadedList.contains(position)) {
+            if (isDownloadedList[position] == true) {
+                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+            } else {
+                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
+            }
+        } else {
+            val filePath = File(holder.itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString() + "/")
+            val file = File(filePath, currentItem.modUri)
+            isDownloadedList[position] = file.exists()
+            if (isDownloadedList[position] == true) {
+                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+            } else {
+                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
+            }
+        }
 
-        if (file.exists()) { // If file exists
-            holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+        holder.itemIsFavIcon.setOnClickListener {
+            val newState = changeState(currentItem, mModViewModel)
+
+            if (!newState) {
+                notifyItemRemoved(position)
+            }
         }
 
         holder.itemCard.setOnClickListener {
