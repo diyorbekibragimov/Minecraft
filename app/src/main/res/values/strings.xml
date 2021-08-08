@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Minecraft</string>
+    <string name="upload">Upload Button</string>
+    <string name="favorite">Add to Favorite Button</string>
+    <string name="placeholder">Minecraft image</string>
+    <string name="cancel">Cancel button</string>
+    <string name="download">Download</string>
+    <string name="downloading">Downloading</string>
+    <string name="install">Install</string>
+    <string name="installed">Installed</string>
+    <string name="file_provider_authority">com.examle.minecraft.fileprovider</string>
+    <string name="minecraft_app_name">com.mojang.minecraftpe</string>
+    <string name="mods">Mods</string>
+    <string name="favorites">Favorites</string>
+    <string name="importAppName">minecraft://?=import=</string>
+    <string name="googlePlayStoreUri">https://play.google.com/store/apps/details?id=</string>
+</resources>
