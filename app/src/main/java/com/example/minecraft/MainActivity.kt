@@ -3,10 +3,11 @@ package com.example.minecraft
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
-import androidx.navigation.ui.setupWithNavController
+import androidx.navigation.fragment.findNavController
 import com.example.minecraft.data.Mod
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.example.minecraft.favorites.FavoritesFragmentDirections
+import com.example.minecraft.main_screen.MainFragmentDirections
+import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
@@ -21,14 +22,28 @@ class MainActivity : AppCompatActivity() {
 
         val view = R.layout.activity_main
         setContentView(view)
-
         supportActionBar?.hide()
 
-        // Instantiating Fragments for the Bottom Navigation
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        val navController = findNavController(R.id.nav_host_fragment)
 
-        bottomNavigationView.setupWithNavController(navController)
+        if (nav_host_fragment.findNavController().currentDestination!!.label.toString() == "Main") {
+            fragment_replace.text = getString(R.string.favorites)
+        } else if (nav_host_fragment.findNavController().currentDestination!!.label.toString() == "Favorites") {
+            fragment_replace.text = getString(R.string.mods)
+        }
+
+        fragment_replace.setOnClickListener {
+            when(fragment_replace.text) {
+                getString(R.string.favorites) -> {
+                    fragment_replace.text = getString(R.string.mods)
+                    nav_host_fragment.findNavController().navigate(MainFragmentDirections.actionMainFragmentToFavoritesFragment())
+                }
+
+                getString(R.string.mods) -> {
+                    fragment_replace.text = getString(R.string.favorites)
+                    nav_host_fragment.findNavController().navigate(FavoritesFragmentDirections.actionFavoritesFragmentToMainFragment())
+                }
+            }
+        }
 
         mModViewModel = ViewModelProvider(this).get(ModViewModel::class.java)
 
@@ -40,7 +55,7 @@ class MainActivity : AppCompatActivity() {
             if (jsonObject.get(key) is JSONObject) {
                 val content = (jsonObject.get(key) as JSONObject).toMap()
                 // If data is in database, then it will ignore and will not inserted
-                val mod = Mod(id = 0, title = content.get("xzgd4d4") as String, content = content.get("xzgd4i1") as String, imageUrl = content.get("xzgd4f2") as String, isFav = false, modUri = content.get("xzgd4t3") as String)
+                val mod = Mod(id = 0, title = content.get("xzgd4d4") as String, content = content.get("xzgd4i1") as String, imageUrl = content.get("xzgd4f2") as String, isFav = false, modUri = content.get("xzgd4t3") as String, isImported = false)
                 // Add data to database
                 mModViewModel.addMod(mod)
             }

@@ -6,7 +6,7 @@
     <string name="cancel">Cancel button</string>
     <string name="download">Download</string>
     <string name="downloading">Downloading</string>
-    <string name="install">Install</string>
+    <string name="install">Installing</string>
     <string name="installed">Installed</string>
     <string name="file_provider_authority">com.examle.minecraft.fileprovider</string>
     <string name="minecraft_app_name">com.mojang.minecraftpe</string>

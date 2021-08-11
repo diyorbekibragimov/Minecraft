@@ -26,6 +26,11 @@ class FavoritesFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_favorites, container, false)
         mModViewModel = ViewModelProvider(this).get(ModViewModel::class.java)
 
+//        view.fragment_replace.setOnClickListener {7
+//            val action = FavoritesFragmentDirections.actionFavoritesFragmentToMainFragment()
+//            view.findNavController().navigate(action)
+//        }
+
         val adapter = FavRecyclerAdapter(mModViewModel)
         recyclerView = view.fav_recycler_view
         recyclerView.adapter = adapter

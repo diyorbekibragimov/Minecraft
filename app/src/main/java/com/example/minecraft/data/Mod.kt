@@ -16,4 +16,5 @@ data class Mod(
         var imageUrl: String,
         var isFav: Boolean,
         var modUri: String,
+        var isImported: Boolean
 ) : Parcelable

@@ -14,7 +14,7 @@ import com.example.minecraft.R
 import com.example.minecraft.adapter.RecyclerAdapter
 import kotlinx.android.synthetic.main.fragment_main.view.*
 
-class MainFragment : Fragment() {
+class MainFragment : Fragment()  {
     private lateinit var mModViewModel: ModViewModel
     private lateinit var recycler_view: RecyclerView
 

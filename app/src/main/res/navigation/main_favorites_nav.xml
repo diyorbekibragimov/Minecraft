@@ -13,9 +13,6 @@
         <action
             android:id="@+id/action_mainFragment_to_favoritesFragment"
             app:destination="@id/favoritesFragment" />
-        <action
-            android:id="@+id/action_mainFragment_to_detailsFragment"
-            app:destination="@id/detailsFragment" />
     </fragment>
     <fragment
         android:id="@+id/favoritesFragment"
@@ -26,23 +23,5 @@
         <action
             android:id="@+id/action_favoritesFragment_to_mainFragment"
             app:destination="@id/mainFragment" />
-        <action
-            android:id="@+id/action_favoritesFragment_to_detailsFragment"
-            app:destination="@id/detailsFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/detailsFragment"
-        android:name="com.example.minecraft.details.DetailsFragment"
-        android:label="Details"
-        tools:layout="@layout/fragment_details" >
-        <action
-            android:id="@+id/action_detailsFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
-        <argument
-            android:name="currentMod"
-            app:argType="com.example.minecraft.data.Mod" />
-        <action
-            android:id="@+id/action_detailsFragment_to_favoritesFragment"
-            app:destination="@id/favoritesFragment" />
     </fragment>
 </navigation>

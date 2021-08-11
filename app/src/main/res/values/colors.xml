@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="mainColor">#FF5D67</color>
-    <color name="mainColor_700">#FFD84F58</color>
+    <color name="mainColor_700">#FDB7B7</color>
     <color name="dark">#2B2B2B</color>
     <color name="dark_700">#0E1212</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="grey">#252525</color>
+    <color name="grey">#777777</color>
     <color name="success">#4BB543</color>
 </resources>

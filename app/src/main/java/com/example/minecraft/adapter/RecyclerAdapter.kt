@@ -1,38 +1,49 @@
 package com.example.minecraft.adapter
 
-import android.os.Environment
+import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.navigation.findNavController
+import androidx.fragment.app.findFragment
 import androidx.recyclerview.widget.RecyclerView
+import com.example.minecraft.DetailDialogFragment
 import com.example.minecraft.ModViewModel
 import com.example.minecraft.R
 import com.example.minecraft.data.Mod
-import com.example.minecraft.main_screen.MainFragmentDirections
-import com.google.android.material.card.MaterialCardView
-import java.io.File
+import com.example.minecraft.main_screen.MainFragment
 
-class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(), ChangeFavState {
+class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(), ChangeFavState, DetailDialogFragment.Listener {
     private var modList = emptyList<Mod>()
     private var isDownloadedList = mutableMapOf<Int, Boolean>()
-    private var isFavList = mutableMapOf<Int, Boolean>()
+    private var isFavMainList = mutableMapOf<Int, Boolean>()
+    private var mLastClickTime = System.currentTimeMillis()
+    private val CLICK_TIME_INTERVAL: Long = 300
+
+    override fun updateData(isFav: Boolean, position: Int) {
+        isFavMainList[position] = isFav
+        changeMainData(isFavMainList)
+    }
+
+    override fun changeUploadIcon(isImported: Boolean, position: Int) {
+        isDownloadedList[position] = isImported
+        changeMainIcon(isDownloadedList)
+    }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var itemTitle: TextView
         var itemContent: TextView
         var itemIsFavIcon: ImageView
         var itemUploadIcon: ImageView
-        var itemCard: MaterialCardView
+        var itemImage: ImageView
 
         init {
             itemTitle = itemView.findViewById(R.id.title)
             itemContent = itemView.findViewById(R.id.content)
             itemIsFavIcon = itemView.findViewById(R.id.favButton)
-            itemCard = itemView.findViewById(R.id.item_card)
             itemUploadIcon = itemView.findViewById(R.id.dwnButton)
+            itemImage = itemView.findViewById(R.id.placeholder)
         }
     }
 
@@ -52,55 +63,31 @@ class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<Re
         holder.itemTitle.text = currentItem.title
         holder.itemContent.text = currentItem.content
 
-        if (isDownloadedList.contains(position)) {
-            if (isDownloadedList[position] == true) {
-                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
-            } else {
-                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
-            }
-        } else {
-            val filePath = File(holder.itemView.context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).toString() + "/")
-            val file = File(filePath, currentItem.modUri)
-            isDownloadedList[position] = file.exists()
-            if (isDownloadedList[position] == true) {
-                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
-            } else {
-                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
-            }
-        }
+        val image = holder.itemView.context.assets.open("images/${currentItem.imageUrl}")
+        val bitmap = BitmapFactory.decodeStream(image)
+        holder.itemImage.setImageBitmap(bitmap)
 
-        if (isFavList.contains(position)) {
-            if (isFavList[position] == true) {
-                holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
-            } else {
-                holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
-            }
-        } else {
-            isFavList[position] = currentItem.isFav
-            if (isFavList[position] == true) {
-                holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
-            } else {
-                holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
-            }
-        }
+        manageUploadIcon(currentItem, holder, position)
+        manageFavIcon(currentItem, holder, position)
 
-        holder.itemIsFavIcon.setOnClickListener {
-            val newState = changeState(currentItem, mModViewModel)
-
-            if (newState) {
-                holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
-            } else {
-                holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
-            }
-            notifyItemChanged(position)
-            isFavList[position] = newState
-            changeData(isFavList)
+        holder.itemView.setOnClickListener {
+            onClickItem(currentItem, position, holder)
         }
-
-        holder.itemCard.setOnClickListener {
-            val action = MainFragmentDirections.actionMainFragmentToDetailsFragment(currentItem)
-            holder.itemView.findNavController().navigate(action)
+    }
+    private fun onClickItem(currentItem: Mod, position: Int, holder: ViewHolder): Any? {
+        val now = System.currentTimeMillis()
+        if (now - mLastClickTime < CLICK_TIME_INTERVAL) {
+            return null
         }
+        mLastClickTime = now
+        openDialog(currentItem, position, holder)
+        return true
+    }
+
+    private fun openDialog(currentItem: Mod, position: Int, holder: ViewHolder) {
+        val dialog = DetailDialogFragment(currentItem, position, "Main")
+        dialog.setListener(this)
+        dialog.show(holder.itemView.findFragment<MainFragment>().requireFragmentManager(), "detailDialog")
     }
 
     override fun getItemCount(): Int {
@@ -112,8 +99,64 @@ class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<Re
         notifyDataSetChanged()
     }
 
-    private fun changeData(isFavList: MutableMap<Int, Boolean>) {
-        this.isFavList = isFavList
+    private fun changeItemFavIcon(currentItem: Mod, holder: ViewHolder, position: Int) {
+        val newState = changeState(currentItem, mModViewModel)
+
+        if (newState) {
+            holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
+        } else {
+            holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
+        }
+        notifyItemChanged(position)
+        isFavMainList[position] = newState
+        changeMainData(isFavMainList)
+    }
+
+    private fun manageUploadIcon(currentItem: Mod, holder: ViewHolder, position: Int) {
+        if (isDownloadedList.contains(position)) {
+            if (isDownloadedList[position] == true) {
+                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+            } else {
+                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
+            }
+        } else {
+            isDownloadedList[position] = currentItem.isImported
+            if (isDownloadedList[position] == true) {
+                holder.itemUploadIcon.setImageResource(R.drawable.downloaded)
+            } else {
+                holder.itemUploadIcon.setImageResource(R.drawable.ic_download)
+            }
+        }
+    }
+
+    private fun manageFavIcon(currentItem: Mod, holder: ViewHolder, position: Int) {
+        if (isFavMainList.contains(position)) {
+            if (isFavMainList[position] == true) {
+                holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
+            } else {
+                holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
+            }
+        } else {
+            isFavMainList[position] = currentItem.isFav
+            if (isFavMainList[position] == true) {
+                holder.itemIsFavIcon.setImageResource(R.drawable.ic_active_star)
+            } else {
+                holder.itemIsFavIcon.setImageResource(R.drawable.ic_inactive_star)
+            }
+        }
+
+        holder.itemIsFavIcon.setOnClickListener {
+            changeItemFavIcon(currentItem, holder, position)
+        }
+    }
+
+     fun changeMainData(isFavList: MutableMap<Int, Boolean>) {
+        this.isFavMainList = isFavList
+        notifyDataSetChanged()
+    }
+
+    fun changeMainIcon(isDownloadedList: MutableMap<Int, Boolean>) {
+        this.isDownloadedList = isDownloadedList
         notifyDataSetChanged()
     }
 }
