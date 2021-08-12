@@ -84,17 +84,20 @@ class DetailDialogFragment(var mod: Mod, var position: Int, var recName: String)
             }
         }
 
-        if (!mod.isImported) {
-            rootView.upload_btn.setOnClickListener {
-                checkForPermissions(
-                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        name = "Storage",
-                        STORAGE_RQ
-                )
-            }
-        } else {
+        val filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+        val file = File(filePath, mod.modUri)
+        if (mod.isImported && file.exists()) {
             rootView.upload_btn.setImageResource(R.drawable.downloaded)
         }
+
+        rootView.upload_btn.setOnClickListener {
+            checkForPermissions(
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    name = "Storage",
+                    STORAGE_RQ
+            )
+        }
+
         return rootView
     }
 
@@ -115,10 +118,11 @@ class DetailDialogFragment(var mod: Mod, var position: Int, var recName: String)
                 Toast.makeText(requireContext(), getString(R.string.downloading), Toast.LENGTH_SHORT).show()
                 // Copy the data from file in assets to the file, which has just been created
                 file.writeBytes(assetManager.open("files/$modUri").readBytes())
-                Toast.makeText(requireContext(), getString(R.string.installed), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.install), Toast.LENGTH_SHORT).show()
             // Delay for 2 seconds before "Install" text appears, allowing to check another condition
             } else if (file.exists()) { // If the text is "Install", meaning that the mod has been copied and is located in the directory
-                Toast.makeText(requireContext(), getString(R.string.install), Toast.LENGTH_SHORT).show()
+                val toast = Toast.makeText(requireContext(), getString(R.string.installing), Toast.LENGTH_SHORT)
+                toast.show()
                 try {
                     val updatedMod = Mod(mod.id, mod.title, mod.content, mod.imageUrl, mod.isFav, mod.modUri, true)
                     mModViewModel.updateMod(updatedMod)
@@ -146,48 +150,32 @@ class DetailDialogFragment(var mod: Mod, var position: Int, var recName: String)
         return false
     }
 
-    private fun checkForPermissions(permission: String, name: String, requestCode: Int) {
+    fun checkForPermissions(permission: String, name: String, requestCode: Int) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             when {
                 ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED -> {
                     saveMod(mod.modUri, requireActivity().assets)
                 }
-                shouldShowRequestPermissionRationale(permission) -> showDialog(
-                        permission,
-                        name,
-                        requestCode
-                )
+                shouldShowRequestPermissionRationale(permission) -> {
+                    showDialog(
+                            permission,
+                            name,
+                            requestCode
+                    )
+                }
 
-                else -> ActivityCompat.requestPermissions(
-                        requireActivity(),
-                        arrayOf(permission),
-                        requestCode
-                )
+                else -> {
+                    ActivityCompat.requestPermissions(
+                            requireActivity(),
+                            arrayOf(permission),
+                            requestCode
+                    )
+                }
             }
         }
     }
-//
-    override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<out String>,
-            grantResults: IntArray,
-    ) {
-        fun innerCheck(name: String) {
-            if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(requireContext(), "$name permission refused", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "$name permission granted", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        when (requestCode) {
-            STORAGE_RQ -> innerCheck("Storage")
-        }
-    }
-
     private fun showDialog(permission: String, name: String, requestCode: Int) {
         val builder = AlertDialog.Builder(requireContext())
-
         builder.apply {
             setMessage("Permission to access your $name is required to use this app")
             setTitle("Permission required")
@@ -198,8 +186,26 @@ class DetailDialogFragment(var mod: Mod, var position: Int, var recName: String)
                         requestCode
                 )
             }
-            val dialog = builder.create()
-            dialog.show()
+            val alertDialog = builder.create()
+            alertDialog.show()
+        }
+    }
+
+
+    override fun onRequestPermissionsResult(
+            requestCode: Int,
+            permissions: Array<out String>,
+            grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        fun innerCheck(name: String) {
+            if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(requireContext(), "$name permission refused", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        when (requestCode) {
+            STORAGE_RQ -> innerCheck("Storage")
         }
     }
 }

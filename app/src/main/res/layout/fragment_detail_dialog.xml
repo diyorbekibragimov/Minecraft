@@ -49,32 +49,32 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-        <ScrollView
-            android:id="@+id/content_wrapper"
+    <ScrollView
+        android:id="@+id/content_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="310dp"
+        app:layout_constraintBottom_toTopOf="@id/buttons_wrapper"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/detalized_title">
+
+        <TextView
+            android:id="@+id/detalized_content"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            app:layout_constraintTop_toBottomOf="@id/detalized_title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/buttons_wrapper"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/detalized_content"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textAlignment="center"
-                android:textColor="@color/white"
-                android:textSize="16sp" />
+    </ScrollView>
 
-        </ScrollView>
-
-        <RelativeLayout
+    <RelativeLayout
             android:id="@+id/buttons_wrapper"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             app:layout_constraintTop_toBottomOf="@id/content_wrapper"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 

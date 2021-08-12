@@ -74,6 +74,7 @@ class RecyclerAdapter(var mModViewModel: ModViewModel) : RecyclerView.Adapter<Re
             onClickItem(currentItem, position, holder)
         }
     }
+
     private fun onClickItem(currentItem: Mod, position: Int, holder: ViewHolder): Any? {
         val now = System.currentTimeMillis()
         if (now - mLastClickTime < CLICK_TIME_INTERVAL) {
